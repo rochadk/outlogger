@@ -220,15 +220,6 @@ namespace LauncherLogout
 
             try
             {
-                // Backup before touching anything — registry values are cleared when Steam shuts down
-                bool backupExists = Directory.Exists(SteamBackupDir) &&
-                                    Directory.GetFiles(SteamBackupDir).Length > 0;
-                if (!backupExists)
-                {
-                    Log("Steam: No backup found — saving default account...");
-                    BackupSteamCredentials();
-                }
-
                 string? steamExe = FindSteamExe();
                 bool wasRunning = Process.GetProcessesByName("steam").Length > 0;
 
@@ -337,7 +328,7 @@ namespace LauncherLogout
                                 Directory.GetFiles(SteamBackupDir).Length > 0;
             if (!backupExists)
             {
-                Log("Steam: No default account saved. Log out first to save it.");
+                Log("Steam: No default account saved. Use 'Save Current' to save credentials first.");
                 SetStatus(SteamStatus, "No account saved", false);
                 return false;
             }
@@ -520,14 +511,6 @@ namespace LauncherLogout
                     Log("Epic: Launcher not currently running.");
                 }
 
-                bool backupExists = Directory.Exists(EpicBackupDir) &&
-                                    Directory.GetFiles(EpicBackupDir).Length > 0;
-                if (!backupExists)
-                {
-                    Log("Epic: No backup found — saving default account...");
-                    BackupEpicCredentials();
-                }
-
                 if (Directory.Exists(EpicSavedDir))
                 {
                     try
@@ -601,7 +584,7 @@ namespace LauncherLogout
                                 Directory.GetFiles(EpicBackupDir).Length > 0;
             if (!backupExists)
             {
-                Log("Epic: No default account saved. Log out first to save it.");
+                Log("Epic: No default account saved. Use 'Save Current' to save credentials first.");
                 SetStatus(EpicStatus, "No account saved", false);
                 return false;
             }

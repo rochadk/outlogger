@@ -14,8 +14,9 @@ A lightweight Windows tray utility for quickly switching game launcher accounts 
 ## How it works
 
 1. **Log in to your launchers** — sign into the accounts you want to save as defaults in Steam and/or Epic Games
-2. **Click "Log Out"** — Outlogger saves your credentials, then signs you out
-3. **Click "Login" to restore** — one click restores your saved credentials and launches the client, signed in and ready
+2. **Click "Save Current"** — saves your credentials as the default accounts to restore to
+3. **Click "Log Out"** — signs you out of the launchers
+4. **Click "Login" to restore** — one click restores your saved credentials and launches the client, signed in and ready
 
 ## Requirements
 
