@@ -1,0 +1,304 @@
+<Window x:Class="LauncherLogout.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Outlogger"
+        Height="680" Width="480"
+        MinHeight="680" MinWidth="480"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgDarkBrush}"
+        ResizeMode="CanMinimize"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing">
+
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="16"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="8"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="8"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center">
+            <TextBlock Text="Outlogger"
+                       FontSize="26" FontWeight="Bold"
+                       Foreground="{StaticResource TextLightBrush}"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="Sign out of your game launchers"
+                       FontSize="13"
+                       Foreground="{StaticResource TextMutedBrush}"
+                       HorizontalAlignment="Center" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Steam Card -->
+        <Border Grid.Row="2" CornerRadius="12" Padding="20,18"
+                Background="#1b2838">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="6"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0"
+                           Text="Steam" FontSize="20" FontWeight="Bold"
+                           Foreground="White"/>
+                <TextBlock Grid.Row="2" Grid.Column="0"
+                           x:Name="SteamStatus"
+                           Text="Ready"
+                           FontSize="12"
+                           Foreground="{StaticResource TextMutedBrush}"/>
+
+                <StackPanel Grid.Row="0" Grid.RowSpan="3" Grid.Column="1"
+                            Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="SteamLogoutBtn"
+                            Content="Log Out"
+                            Background="#171a21"
+                            Style="{StaticResource LogoutButton}"
+                            Padding="16,10"
+                            Click="SteamLogout_Click"
+                            Margin="0,0,8,0"/>
+                    <Button x:Name="SteamLoginBtn"
+                            Content="Login"
+                            Background="#27ae60"
+                            Style="{StaticResource LogoutButton}"
+                            Padding="16,10"
+                            Click="SteamLogin_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Epic Card -->
+        <Border Grid.Row="4" CornerRadius="12" Padding="20,18"
+                Background="#2a2a2a">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="6"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0"
+                           Text="Epic Games" FontSize="20" FontWeight="Bold"
+                           Foreground="White"/>
+                <TextBlock Grid.Row="2" Grid.Column="0"
+                           x:Name="EpicStatus"
+                           Text="Ready"
+                           FontSize="12"
+                           Foreground="{StaticResource TextMutedBrush}"/>
+
+                <StackPanel Grid.Row="0" Grid.RowSpan="3" Grid.Column="1"
+                            Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="EpicLogoutBtn"
+                            Content="Log Out"
+                            Background="#111111"
+                            Style="{StaticResource LogoutButton}"
+                            Padding="16,10"
+                            Click="EpicLogout_Click"
+                            Margin="0,0,8,0"/>
+                    <Button x:Name="EpicLoginBtn"
+                            Content="Login"
+                            Background="#27ae60"
+                            Style="{StaticResource LogoutButton}"
+                            Padding="16,10"
+                            Click="EpicLogin_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Log Out All -->
+        <Button Grid.Row="6"
+                x:Name="LogoutAllBtn"
+                Content="Log Out of All"
+                Background="{StaticResource AccentPinkBrush}"
+                Style="{StaticResource LogoutButton}"
+                FontSize="16"
+                Click="LogoutAll_Click"
+                HorizontalAlignment="Stretch"/>
+
+        <!-- Credentials Section -->
+        <Border Grid.Row="8" CornerRadius="10" Padding="16,14"
+                Background="#0d1117">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Text="Saved Credentials"
+                           FontSize="12" FontWeight="SemiBold"
+                           Foreground="{StaticResource TextMutedBrush}"/>
+
+                <!-- Steam credential row -->
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="60"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="6"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Steam"
+                               FontSize="12" FontWeight="SemiBold"
+                               Foreground="#8892a0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" x:Name="SteamCredentialText"
+                               Text="Not saved"
+                               FontSize="12" FontFamily="Consolas"
+                               Foreground="#eaeaea" VerticalAlignment="Center"/>
+                    <Button Grid.Column="2" x:Name="SteamSaveBtn"
+                            Content="Save Current" Click="SteamSave_Click"
+                            Background="#1b4d2e" Foreground="#2ecc71"
+                            FontSize="11" Padding="10,4"
+                            BorderThickness="0" Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="b" Background="{TemplateBinding Background}"
+                                        CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="b" Property="Background" Value="#27ae60"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button Grid.Column="4" x:Name="SteamClearBtn"
+                            Content="Clear" Click="SteamClear_Click"
+                            Background="#333" Foreground="#8892a0"
+                            FontSize="11" Padding="10,4"
+                            BorderThickness="0" Cursor="Hand"
+                            Visibility="Collapsed">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="b" Background="{TemplateBinding Background}"
+                                        CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="b" Property="Background" Value="#e74c3c"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+
+                <!-- Epic credential row -->
+                <Grid Grid.Row="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="60"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="6"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Epic"
+                               FontSize="12" FontWeight="SemiBold"
+                               Foreground="#8892a0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" x:Name="EpicCredentialText"
+                               Text="Not saved"
+                               FontSize="12" FontFamily="Consolas"
+                               Foreground="#eaeaea" VerticalAlignment="Center"/>
+                    <Button Grid.Column="2" x:Name="EpicSaveBtn"
+                            Content="Save Current" Click="EpicSave_Click"
+                            Background="#1b4d2e" Foreground="#2ecc71"
+                            FontSize="11" Padding="10,4"
+                            BorderThickness="0" Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="b" Background="{TemplateBinding Background}"
+                                        CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="b" Property="Background" Value="#27ae60"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                    <Button Grid.Column="4" x:Name="EpicClearBtn"
+                            Content="Clear" Click="EpicClear_Click"
+                            Background="#333" Foreground="#8892a0"
+                            FontSize="11" Padding="10,4"
+                            BorderThickness="0" Cursor="Hand"
+                            Visibility="Collapsed">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border x:Name="b" Background="{TemplateBinding Background}"
+                                        CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="b" Property="Background" Value="#e74c3c"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Settings toggles -->
+        <Border Grid.Row="10" CornerRadius="10" Padding="16,12"
+                Background="#0d1117">
+            <StackPanel>
+                <CheckBox x:Name="AutoLogoutToggle"
+                          Content="Restore defaults on shutdown"
+                          Foreground="#8892a0" FontSize="12"
+                          Checked="AutoLogoutToggle_Changed"
+                          Unchecked="AutoLogoutToggle_Changed"/>
+                <CheckBox x:Name="StartupToggle"
+                          Content="Start Outlogger at login"
+                          Foreground="#8892a0" FontSize="12"
+                          Margin="0,8,0,0"
+                          Checked="StartupToggle_Changed"
+                          Unchecked="StartupToggle_Changed"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Log area -->
+        <Border Grid.Row="12" CornerRadius="8" Background="#0d1117"
+                Padding="12,10">
+            <ScrollViewer x:Name="LogScroller" VerticalScrollBarVisibility="Auto" MaxHeight="100">
+                <TextBlock x:Name="LogText"
+                           Text=""
+                           FontSize="11"
+                           FontFamily="Consolas"
+                           Foreground="{StaticResource TextMutedBrush}"
+                           TextWrapping="Wrap"/>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</Window>
