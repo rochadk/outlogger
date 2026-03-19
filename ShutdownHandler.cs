@@ -16,7 +16,7 @@ namespace LauncherLogout
 
         private static string EpicConfigFile =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                         "EpicGamesLauncher", "Saved", "Config", "Windows", "GameUserSettings.ini");
+                         "EpicGamesLauncher", "Saved", "Config", "WindowsEditor", "GameUserSettings.ini");
 
         private static string EpicDataDir =>
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -87,6 +87,8 @@ namespace LauncherLogout
             // Kill Epic
             KillProcess("EpicGamesLauncher");
             KillProcess("EpicWebHelper");
+            KillProcess("EpicOnlineServicesUserHelper");
+            KillProcess("msedgewebview2");
 
             // Clear webcache and dat files
             if (Directory.Exists(EpicSavedDir))
