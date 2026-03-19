@@ -35,7 +35,7 @@ namespace LauncherLogout
         private static void KillProcess(string name)
         {
             foreach (var proc in Process.GetProcessesByName(name))
-                try { proc.Kill(); proc.WaitForExit(3000); } catch { }
+                try { proc.Kill(); } catch { }
         }
 
         private static void LogoutAndRestoreSteam()

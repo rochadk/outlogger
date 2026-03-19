@@ -20,6 +20,10 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+# Installer output
+publish/
+installer-output/
+
 # OS
 Thumbs.db
 Desktop.ini

@@ -783,8 +783,7 @@ namespace LauncherLogout
                 if (key == null) return;
                 if (enable)
                 {
-                    string exePath = System.Reflection.Assembly.GetExecutingAssembly().Location
-                        .Replace(".dll", ".exe");
+                    string exePath = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule!.FileName;
                     key.SetValue("Outlogger", $"\"{exePath}\"", RegistryValueKind.String);
                 }
                 else
