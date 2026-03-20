@@ -93,6 +93,8 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="6"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0"
@@ -103,8 +105,14 @@
                            Text="Ready"
                            FontSize="12"
                            Foreground="{StaticResource TextMutedBrush}"/>
+                <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"
+                           Text="⚠ Always use Log Out here — signing out inside Epic revokes your session and breaks restore."
+                           FontSize="11"
+                           Foreground="#b8860b"
+                           TextWrapping="Wrap"
+                           Opacity="0.85"/>
 
-                <StackPanel Grid.Row="0" Grid.RowSpan="3" Grid.Column="1"
+                <StackPanel Grid.Row="0" Grid.RowSpan="5" Grid.Column="1"
                             Orientation="Horizontal" VerticalAlignment="Center">
                     <Button x:Name="EpicLogoutBtn"
                             Content="Log Out"
