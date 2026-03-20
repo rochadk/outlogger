@@ -82,7 +82,16 @@ namespace LauncherLogout
             if (!Directory.Exists(EpicWebViewBackupDir)) return;
 
             if (Directory.Exists(EpicWebViewDir))
-                Directory.Delete(EpicWebViewDir, recursive: true);
+            {
+                bool deleted = false;
+                for (int attempt = 0; attempt < 4 && !deleted; attempt++)
+                {
+                    if (attempt > 0) System.Threading.Thread.Sleep(1000);
+                    try { Directory.Delete(EpicWebViewDir, recursive: true); deleted = true; }
+                    catch { }
+                }
+                if (!deleted) return; // Can't clear it — skip restore rather than corrupting
+            }
 
             CopyDirectoryRecursive(EpicWebViewBackupDir, EpicWebViewDir);
         }
@@ -245,6 +254,15 @@ namespace LauncherLogout
                 BackupEpicWebView();
                 Log("Epic: Saved browser session.");
 
+                try
+                {
+                    using var key = Registry.CurrentUser.OpenSubKey(@"Software\Epic Games\Unreal Engine\Identifiers");
+                    string? accountId = key?.GetValue("AccountId") as string;
+                    if (!string.IsNullOrEmpty(accountId))
+                        File.WriteAllText(Path.Combine(EpicBackupDir, "accountid.txt"), accountId);
+                }
+                catch { }
+
                 Log("Epic: Saved default account.");
             }
             catch (Exception ex)
@@ -368,10 +386,7 @@ namespace LauncherLogout
                         allGood = false;
                     }
                 }
-                else
-                {
-                    Log($"Epic: Browser session dir not found at expected path.");
-                }
+                // else: EBWebView doesn't exist on this install — nothing to clear
 
                 // Clear EOS service caches (store auth state independently of EGL)
                 foreach (string dir in new[] { EosUiHelperCacheDir, EosOverlayCacheDir })
@@ -422,17 +437,31 @@ namespace LauncherLogout
 
             try
             {
-                bool wasRunning =
-                    Process.GetProcessesByName("EpicGamesLauncher").Length > 0 ||
-                    Process.GetProcessesByName("EpicWebHelper").Length > 0;
+                string[] epicProcesses = [
+                    "EpicGamesLauncher", "EpicWebHelper",
+                    "EpicOnlineServicesUserHelper", "msedgewebview2"
+                ];
+
+                bool wasRunning = false;
+                foreach (string name in epicProcesses)
+                    if (KillProcess(name)) wasRunning = true;
 
                 if (wasRunning)
                 {
-                    KillProcess("EpicGamesLauncher");
-                    KillProcess("EpicWebHelper");
-                    Log("Epic: Closed running launcher.");
-                    await Task.Delay(1500);
+                    Log("Epic: Closed running processes.");
+                    await Task.Delay(2500);
                 }
+                else
+                {
+                    // Processes may have crashed recently — give the OS a moment
+                    // to release any lingering file handles before restoring.
+                    await Task.Delay(1000);
+                }
+
+                // Clear any existing .dat files (may belong to a different user)
+                if (Directory.Exists(EpicDataDir))
+                    foreach (string file in Directory.GetFiles(EpicDataDir, "*.dat"))
+                        try { File.Delete(file); } catch { }
 
                 Directory.CreateDirectory(EpicDataDir);
                 int restored = 0;
@@ -463,27 +492,49 @@ namespace LauncherLogout
                 string rememberMeBackup = Path.Combine(EpicBackupDir, "rememberme.txt");
                 string offlineBackup    = Path.Combine(EpicBackupDir, "offline.txt");
 
-                if (File.Exists(EpicConfigFile) && File.Exists(rememberMeBackup))
+                if (File.Exists(rememberMeBackup))
                 {
-                    string ini = File.ReadAllText(EpicConfigFile);
+                    // Config file may be absent or have its sections stripped by Epic's own logout
+                    string ini = File.Exists(EpicConfigFile) ? File.ReadAllText(EpicConfigFile) : "";
                     string rememberMeSection = File.ReadAllText(rememberMeBackup);
 
-                    ini = Regex.Replace(ini, @"\[RememberMe\].*?(?=\n\[|\z)", rememberMeSection.TrimEnd(),
-                                        RegexOptions.Singleline);
+                    if (Regex.IsMatch(ini, @"\[RememberMe\]", RegexOptions.Singleline))
+                        ini = Regex.Replace(ini, @"\[RememberMe\].*?(?=\n\[|\z)", rememberMeSection.TrimEnd(),
+                                            RegexOptions.Singleline);
+                    else
+                        ini = ini.TrimEnd() + (ini.Length > 0 ? "\n" : "") + rememberMeSection.TrimEnd() + "\n";
 
                     if (File.Exists(offlineBackup))
                     {
                         string offlineSection = File.ReadAllText(offlineBackup);
-                        ini = Regex.Replace(ini, @"\[Offline\].*?(?=\n\[|\z)", offlineSection.TrimEnd(),
-                                            RegexOptions.Singleline);
+                        if (Regex.IsMatch(ini, @"\[Offline\]", RegexOptions.Singleline))
+                            ini = Regex.Replace(ini, @"\[Offline\].*?(?=\n\[|\z)", offlineSection.TrimEnd(),
+                                                RegexOptions.Singleline);
+                        else
+                            ini = ini.TrimEnd() + "\n" + offlineSection.TrimEnd() + "\n";
                     }
 
+                    Directory.CreateDirectory(Path.GetDirectoryName(EpicConfigFile)!);
                     File.WriteAllText(EpicConfigFile, ini);
                     Log("Epic: Restored auth tokens.");
                 }
 
                 RestoreEpicWebView();
                 Log("Epic: Restored browser session.");
+
+                string accountIdFile = Path.Combine(EpicBackupDir, "accountid.txt");
+                if (File.Exists(accountIdFile))
+                {
+                    try
+                    {
+                        string accountId = File.ReadAllText(accountIdFile).Trim();
+                        using var key = Registry.CurrentUser.CreateSubKey(
+                            @"Software\Epic Games\Unreal Engine\Identifiers");
+                        key?.SetValue("AccountId", accountId, RegistryValueKind.String);
+                        Log("Epic: Restored account identity.");
+                    }
+                    catch (Exception ex) { Log($"Epic: Could not restore account identity - {ex.Message}"); }
+                }
 
                 string? epicExe = FindEpicExe();
                 if (epicExe != null)
@@ -568,5 +619,120 @@ namespace LauncherLogout
             }
             RefreshCredentialsDisplay();
         }
+
+        private void EpicDiagnose_Click(object sender, RoutedEventArgs e)
+        {
+            Log("── Epic Diagnose ────────────────────────────");
+            LogEpicBackupState();
+            LogEpicLiveState();
+            Log("─────────────────────────────────────────────");
+        }
+
+        private void LogEpicBackupState()
+        {
+            Log("  [Backup]");
+            if (!Directory.Exists(EpicBackupDir)) { Log("    No backup directory found."); return; }
+
+            // .dat files
+            var datFiles = Directory.GetFiles(EpicBackupDir, "*.dat");
+            Log($"    .dat files: {datFiles.Length}" + (datFiles.Length > 0
+                ? " (" + string.Join(", ", Array.ConvertAll(datFiles, Path.GetFileName)) + ")" : ""));
+
+            // rememberme.txt
+            string rmPath = Path.Combine(EpicBackupDir, "rememberme.txt");
+            if (File.Exists(rmPath))
+            {
+                string rmText = File.ReadAllText(rmPath);
+                var dataMatch = Regex.Match(rmText, @"^Data\s*=(.*)$", RegexOptions.Multiline);
+                string dataVal = dataMatch.Success ? dataMatch.Groups[1].Value.Trim() : "(not found)";
+                Log($"    rememberme.txt: present, Data= {Truncate(dataVal)}");
+                var enableMatch = Regex.Match(rmText, @"^Enable\s*=(.*)$", RegexOptions.Multiline);
+                if (enableMatch.Success) Log($"    rememberme Enable= {enableMatch.Groups[1].Value.Trim()}");
+            }
+            else Log("    rememberme.txt: absent");
+
+            // offline.txt
+            Log($"    offline.txt: {(File.Exists(Path.Combine(EpicBackupDir, "offline.txt")) ? "present" : "absent")}");
+
+            // wincreds.json
+            string wcPath = Path.Combine(EpicBackupDir, "wincreds.json");
+            if (File.Exists(wcPath))
+            {
+                try
+                {
+                    var saved = JsonSerializer.Deserialize<List<SavedCredential>>(File.ReadAllText(wcPath));
+                    Log($"    wincreds.json: {saved?.Count ?? 0} credential(s)");
+                    if (saved != null)
+                        foreach (var c in saved) Log($"      - {c.Target} (user: {c.UserName})");
+                }
+                catch (Exception ex) { Log($"    wincreds.json: parse error - {ex.Message}"); }
+            }
+            else Log("    wincreds.json: absent");
+
+            // WebView backup
+            if (Directory.Exists(EpicWebViewBackupDir))
+            {
+                int fileCount = Directory.GetFiles(EpicWebViewBackupDir, "*", SearchOption.AllDirectories).Length;
+                Log($"    EBWebView backup: {fileCount} file(s)");
+            }
+            else Log("    EBWebView backup: absent");
+        }
+
+        private void LogEpicLiveState()
+        {
+            Log("  [Live Epic state]");
+
+            // .dat files
+            if (Directory.Exists(EpicDataDir))
+            {
+                var datFiles = Directory.GetFiles(EpicDataDir, "*.dat");
+                Log($"    Data\\.dat files: {datFiles.Length}" + (datFiles.Length > 0
+                    ? " (" + string.Join(", ", Array.ConvertAll(datFiles, Path.GetFileName)) + ")" : ""));
+            }
+            else Log("    Data dir: absent");
+
+            // GameUserSettings.ini
+            if (File.Exists(EpicConfigFile))
+            {
+                string ini = File.ReadAllText(EpicConfigFile);
+                var rmSection = Regex.Match(ini, @"\[RememberMe\].*?(?=\n\[|\z)", RegexOptions.Singleline);
+                if (rmSection.Success)
+                {
+                    var dataMatch  = Regex.Match(rmSection.Value, @"^Data\s*=(.*)$",   RegexOptions.Multiline);
+                    var enableMatch = Regex.Match(rmSection.Value, @"^Enable\s*=(.*)$", RegexOptions.Multiline);
+                    string dataVal = dataMatch.Success ? dataMatch.Groups[1].Value.Trim() : "(not found)";
+                    Log($"    GameUserSettings [RememberMe] present");
+                    Log($"      Data= {Truncate(dataVal)}");
+                    if (enableMatch.Success) Log($"      Enable= {enableMatch.Groups[1].Value.Trim()}");
+                }
+                else Log("    GameUserSettings: [RememberMe] section absent");
+            }
+            else Log($"    GameUserSettings.ini: absent ({EpicConfigFile})");
+
+            // Windows credentials
+            var wincreds = GetEpicWindowsCredentials();
+            Log($"    Windows credentials: {wincreds.Count}");
+            foreach (var c in wincreds) Log($"      - {c.Target} (user: {c.UserName})");
+
+            // Registry AccountId
+            try
+            {
+                using var key = Registry.CurrentUser.OpenSubKey(@"Software\Epic Games\Unreal Engine\Identifiers");
+                string? accountId = key?.GetValue("AccountId") as string;
+                Log($"    Registry AccountId: {(string.IsNullOrEmpty(accountId) ? "(empty/absent)" : accountId)}");
+            }
+            catch { Log("    Registry AccountId: (could not read)"); }
+
+            // EBWebView live dir
+            if (Directory.Exists(EpicWebViewDir))
+            {
+                int fileCount = Directory.GetFiles(EpicWebViewDir, "*", SearchOption.AllDirectories).Length;
+                Log($"    EBWebView live: {fileCount} file(s)");
+            }
+            else Log($"    EBWebView live: absent ({EpicWebViewDir})");
+        }
+
+        private static string Truncate(string s) =>
+            s.Length == 0 ? "(empty)" : s.Length <= 32 ? s : s[..16] + "…" + s[^8..] + $" ({s.Length} chars)";
     }
 }
